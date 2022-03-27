@@ -5,9 +5,9 @@ import (
 	"github.com/gin-contrib/sessions/cookie"
 	"github.com/gin-gonic/gin"
 	"github.com/xujiajun/nutsdb"
-	"jindan/service"
 	"log"
 	"os"
+	"smash-golden-eggs/service"
 )
 
 const (

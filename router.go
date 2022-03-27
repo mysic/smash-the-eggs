@@ -3,10 +3,10 @@ package main
 import (
 	"fmt"
 	"github.com/gin-gonic/gin"
-	"jindan/admin"
-	"jindan/api"
-	"jindan/middleware"
 	"net/http"
+	"smash-golden-eggs/admin"
+	"smash-golden-eggs/api"
+	"smash-golden-eggs/middleware"
 	"time"
 )
 
