@@ -3,10 +3,14 @@ package main
 import (
 	"fmt"
 	"github.com/gin-gonic/gin"
+	"github.com/xujiajun/nutsdb"
+	"golang.org/x/crypto/bcrypt"
+	"log"
 	"net/http"
 	"smash-golden-eggs/admin"
 	"smash-golden-eggs/api"
 	"smash-golden-eggs/middleware"
+	"smash-golden-eggs/service"
 	"time"
 )
 
@@ -65,16 +69,16 @@ func RegisterRouter(r *gin.Engine) {
 
 	})
 
-// 	r.GET("/init", func(c *gin.Context) {
-// 		if err := service.Conn.Update(func(tx *nutsdb.Tx) error {
-// 			err := tx.Delete("admin", []byte("admin"))
-// 			if err != nil {
-// 				log.Println(err)
-// 			}
-// 			password, _ := bcrypt.GenerateFromPassword([]byte("123456"), bcrypt.DefaultCost)
-// 			return tx.Put("admin", []byte("admin"), password,0)
-// 		}); err != nil {
-// 			log.Println(err)
-// 		}
-// 	})
+	r.GET("/init", func(c *gin.Context) {
+		if err := service.Conn.Update(func(tx *nutsdb.Tx) error {
+			err := tx.Delete("admin", []byte("admin"))
+			if err != nil {
+				log.Println(err)
+			}
+			password, _ := bcrypt.GenerateFromPassword([]byte("123456"), bcrypt.DefaultCost)
+			return tx.Put("admin", []byte("admin"), password,0)
+		}); err != nil {
+			log.Println(err)
+		}
+	})
 }

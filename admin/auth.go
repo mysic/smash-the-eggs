@@ -1,6 +1,7 @@
 package admin
 
 import (
+	"fmt"
 	"github.com/gin-contrib/sessions"
 	"github.com/gin-gonic/gin"
 	"github.com/xujiajun/nutsdb"
@@ -22,6 +23,15 @@ type passwordForm struct {
 
 // Login 登入
 func Login (c *gin.Context) {
+	session := sessions.Default(c)
+	if isAdmin := session.Get("isAdmin"); isAdmin != nil && len(isAdmin.(string)) > 0{
+		c.JSON(http.StatusOK, gin.H{
+			"code": 0,
+			"msg":"已经登录了",
+		})
+		return
+	}
+
 	var params loginForm
 	if err := c.ShouldBind(&params); err != nil {
 		c.JSON(http.StatusOK, gin.H{
@@ -42,6 +52,13 @@ func Login (c *gin.Context) {
 			return err
 		}
 		dbPassword = val.Value
+		all ,err := tx.GetAll(bucket)
+		if err != nil {
+			return err
+		}
+		for _,v := range all {
+			fmt.Println(v.Key,v.Value)
+		}
 		return nil
 	});err != nil {}
 	err := bcrypt.CompareHashAndPassword(dbPassword, password)
@@ -52,7 +69,7 @@ func Login (c *gin.Context) {
 		})
 		return 
 	}
-	session := sessions.Default(c)
+
 	session.Set("isAdmin","yes")
 	err = session.Save()
 	if err != nil {
@@ -114,7 +131,16 @@ func Password (c *gin.Context) {
 // Logout 登出
 func Logout (c *gin.Context) {
 	session := sessions.Default(c)
+	session.Options(sessions.Options{MaxAge: -1})
 	session.Clear()
+	err := session.Save()
+	if err != nil {
+		c.JSON(http.StatusOK, gin.H{
+			"code": 0,
+			"msg":"登出失败",
+			"data":err.Error(),
+		})
+	}
 	c.JSON(http.StatusOK, gin.H{
 		"code": 0,
 		"msg":"成功登出",
