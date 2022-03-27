@@ -3,8 +3,8 @@ package admin
 import (
 	"github.com/gin-gonic/gin"
 	"github.com/xujiajun/nutsdb"
-	"jindan/service"
 	"net/http"
+	"smash-golden-eggs/service"
 )
 
 const (

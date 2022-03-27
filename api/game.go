@@ -3,9 +3,9 @@ package api
 import (
 	"github.com/gin-contrib/sessions"
 	"github.com/gin-gonic/gin"
-	"jindan/service"
 	"math/rand"
 	"net/http"
+	"smash-golden-eggs/service"
 	"time"
 )
 
