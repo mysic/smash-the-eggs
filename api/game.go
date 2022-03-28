@@ -48,7 +48,25 @@ func Smash(c *gin.Context) {
 	}
 	session := sessions.Default(c)
 	paidFigure := session.Get("paidFigure").(string)
-	//todo 开启计时器倒计时，如果超过时间未重新支付，则解锁service.GameInstance.PlayMutex go + channel
+	//todo 开启计时器倒计时，如果超过时间未重新支付，则解锁service.GameInstance.PlayMutex
+	go func() {
+		time.Sleep(time.Second * 10)
+		//err := service.Conn.View(func(tx *nutsdb.Tx) error {
+		//	orderInfo, err := tx.LRange(bucket, []byte(orderSn), 0, -1)
+		//	if err != nil {
+		//		return err
+		//	}
+		//	if string(orderInfo[3]) != service.OrderStatusPaid {
+		//		service.GameInstance.PlayMutex = false
+		//	}
+		//
+		//	return nil
+		//})
+		//if err != nil {
+		//	return
+		//}
+
+	}()
 	//todo 从Game.Figures中删除所砸的金蛋，将砸掉的金蛋序号写入Game.SmashedFigures中 （事务处理）
 
 	//对比接口post上来的smash数字是否一致，如果一致返回成功砸中，不一致返回没砸中
