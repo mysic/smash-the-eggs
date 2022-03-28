@@ -8,7 +8,14 @@ import (
 const (
 	OrderStatusPaying = "paying"
 	OrderStatusPaid = "paid"
+	OrderStatusCancel = "cancel"
 )
+
+var OrderInstance *Order
+
+type Order struct {
+	PaidFigure string
+}
 
 func OrderSnGen() string {
 	node, _ := snowflake.NewNode(1)

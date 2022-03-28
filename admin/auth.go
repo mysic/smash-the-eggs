@@ -24,7 +24,7 @@ type passwordForm struct {
 // Login 登入
 func Login (c *gin.Context) {
 	session := sessions.Default(c)
-	if isAdmin := session.Get("isAdmin"); isAdmin != nil && len(isAdmin.(string)) > 0{
+	if isAdmin := session.Get("isAdmin"); isAdmin == "yes" {
 		c.JSON(http.StatusOK, gin.H{
 			"code": 0,
 			"msg":"已经登录了",

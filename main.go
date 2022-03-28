@@ -7,6 +7,7 @@ import (
 	"github.com/xujiajun/nutsdb"
 	"log"
 	"os"
+	"smash-golden-eggs/middleware"
 	"smash-golden-eggs/service"
 )
 
@@ -22,7 +23,7 @@ func main(){
 	router := gin.Default()
 	// 启动session
 	store := cookie.NewStore([]byte("jfa8389sf729ap(*&DJA(#xl"))
-	router.Use(sessions.Sessions("smashGoldenEggs", store))
+	router.Use(sessions.Sessions("smashGoldenEggs", store), middleware.Cors())
 	// 启动db
 	dbConfig := nutsdb.DefaultOptions
 	dbConfig.Dir = "data/db"
@@ -47,6 +48,9 @@ func main(){
 		PayCount:0,
 		Status: false,
 		PlayMutex: false,
+	}
+	service.OrderInstance = &service.Order{
+		PaidFigure: "",
 	}
 	// 启动http服务
 	err = router.Run(":8668")

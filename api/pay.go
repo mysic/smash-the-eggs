@@ -15,25 +15,6 @@ type prePayForm struct {
 }
 //PrePay 支付预下单
 func PrePay(c *gin.Context) {
-	// todo 调用预下单的时候就锁定所选的figure
-	// 游戏正在进行中，不能购买金蛋
-	//todo 修改service.GameInstance.PlayMutex变量时，需要加互斥锁
-	if service.GameInstance.PlayMutex == true {
-		c.JSON(http.StatusOK, gin.H{
-			"code": -1,
-			"msg":"游戏正在进行中，请稍等片刻,当前玩家["+service.GameInstance.CurrentPlayer+"]",
-		})
-		return
-	}
-	var params prePayForm
-	if err := c.ShouldBind(&params); err != nil {
-		c.JSON(http.StatusOK, gin.H{
-			"code": -1,
-			"msg":"参数错误",
-			"data":err.Error(),
-		})
-		return
-	}
 	//判断金蛋是否已经全部购买完
 	payCount := service.GameInstance.PayCount
 	if payCount >= len(service.GameInstance.Figures) + len(service.GameInstance.SmashedFigures) {
@@ -43,9 +24,29 @@ func PrePay(c *gin.Context) {
 		})
 		return
 	}
-	// 用户买的金蛋保存到session
-	figure := c.PostForm("figure")
 	session := sessions.Default(c)
+	mobile := session.Get("mobile")
+	if (service.GameInstance.PlayMutex == true && mobile != service.GameInstance.CurrentPlayer) || !service.Mutex.TryLock() {
+		c.JSON(http.StatusOK, gin.H{
+			"code": -1,
+			"msg":"游戏正在进行中，请稍等片刻",
+		})
+		return
+	}
+	service.GameInstance.PlayMutex = true //tips 此变量的更新在最终游戏结束，当前用户时限内未购买的情况下进行解锁
+	service.Mutex.Unlock()
+	service.GameInstance.CurrentPlayer = mobile.(string)
+	var params prePayForm
+	if err := c.ShouldBind(&params); err != nil {
+		c.JSON(http.StatusOK, gin.H{
+			"code": -1,
+			"msg":"参数错误",
+			"data":err.Error(),
+		})
+		return
+	}
+	// 用户选的金蛋figure保存到session
+	figure := c.PostForm("figure")
 	session.Set("figure", figure)
 	err := session.Save()
 	if err != nil {
@@ -87,22 +88,84 @@ func PrePay(c *gin.Context) {
 	if err != nil {
 		return 
 	}
-	// todo 1分钟内未完成支付，则状态修改为可购买，可供其他人购买 修改状态通过goroutine计时器 + channel 完成
-	//todo 获取商户支付参数,调用预下单接口
+	//todo
+	go func(bucket,orderSn string) {
+		time.Sleep(time.Second * 60)
+		err := service.Conn.View(func(tx *nutsdb.Tx) error {
+			orderInfo, err := tx.LRange(bucket, []byte(orderSn), 0, -1)
+			if err != nil {
+				return err
+			}
+			if string(orderInfo[3]) != service.OrderStatusPaid {
+				service.GameInstance.PlayMutex = false
+			}
+
+			return nil
+		})
+		if err != nil {
+			return
+		}
+
+	}(bucket,orderSn)
+	//todo 获取商户支付参数,调用预下单接口(不返JSON，直接redirect)
 	c.JSON(http.StatusOK, gin.H{
 		"code": 0,
-		"msg" : "用户购买成功",
+		"msg" : "拉起支付成功",
+		"data": "",//todo 微信返回的预支付下单地址
 	})
 }
 
 func Notify(c *gin.Context){
+	var orderSn,resultCode string
+	orderSn = "32393932902039"//fixme 模拟微信回调中的 out_trade_no
+	//resultCode := "success" //fixme 模拟微信回调中的结果
 	//todo 微信验签
-	//todo 根据订单号查询所购买的figure
-	paidFigure := 1 //fixme temp delete
-	session := sessions.Default(c)
-	session.Set("paidFigure", paidFigure)
-	//todo service:Game中存储本次支付成功的用户mobile
-	//todo service.GameInstance.PayCount 加1
-	//todo 订单记录中记录本次交易记录
-	//todo 支付成功，开启互斥锁
+	bucket := "order"
+	key := []byte(orderSn)
+	payState := service.OrderStatusPaying
+	if resultCode == "SUCCESS" {
+		payState = service.OrderStatusPaid
+	} else {
+		payState = service.OrderStatusCancel
+	}
+	//更新订单状态
+	err := service.Conn.Update(func(tx *nutsdb.Tx) error {
+		err := tx.LSet(bucket, key, 3, []byte(payState))
+		if err != nil {
+			return err
+		}
+		return nil
+	})
+	if err != nil {
+		return
+	}
+	// 如果支付失败，解锁游戏，其他认可以购买
+	if resultCode != "SUCCESS" {
+		service.GameInstance.PlayMutex = false
+		//ret := gin.H{
+		//	"return_code" : "SUCCESS",
+		//	"return_msg": "",
+		//}
+		// todo return response微信
+		return
+	}
+	// 根据订单号查询所购买的figure
+	var paidFigure,mobile string
+	err = service.Conn.View(func(tx *nutsdb.Tx) error {
+		orderInfo, err := tx.LRange(bucket, key, 0, -1)
+		if err != nil {
+			return err
+		}
+		paidFigure = string(orderInfo[2])
+		return nil
+	})
+	if err != nil {
+		return
+	}
+	// 订单记录下当前游戏中购买的
+	service.OrderInstance.PaidFigure = paidFigure
+	service.GameInstance.CurrentPlayer = mobile
+	service.GameInstance.PayCount++
+	// todo return response微信
+
 }

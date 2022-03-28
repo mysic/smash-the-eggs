@@ -48,7 +48,7 @@ func Smash(c *gin.Context) {
 	}
 	session := sessions.Default(c)
 	paidFigure := session.Get("paidFigure").(string)
-	//todo 开启计时器计时
+	//todo 开启计时器倒计时，如果超过时间未重新支付，则解锁service.GameInstance.PlayMutex go + channel
 	//todo 从Game.Figures中删除所砸的金蛋，将砸掉的金蛋序号写入Game.SmashedFigures中 （事务处理）
 
 	//对比接口post上来的smash数字是否一致，如果一致返回成功砸中，不一致返回没砸中
@@ -68,7 +68,7 @@ func Smash(c *gin.Context) {
 
 }
 
-//todo 需要改进
+
 func shuffle(slice []any) {
 	r := rand.New(rand.NewSource(time.Now().Unix()))
 	for len(slice) > 0 {
