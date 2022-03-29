@@ -1,13 +1,10 @@
 package api
 
 import (
-	"context"
+	"fmt"
 	"github.com/gin-contrib/sessions"
 	"github.com/gin-gonic/gin"
-	"github.com/wechatpay-apiv3/wechatpay-go/core"
-	"github.com/wechatpay-apiv3/wechatpay-go/services/payments/h5"
 	"github.com/xujiajun/nutsdb"
-	"log"
 	"net/http"
 	"smash-golden-eggs/service"
 	"strconv"
@@ -29,6 +26,7 @@ func PrePay(c *gin.Context) {
 		return
 	}
 	session := sessions.Default(c)
+	//用户手机号
 	mobile := session.Get("mobile")
 	if (service.GameInstance.PlayMutex == true && mobile != service.GameInstance.CurrentPlayer) || !service.Mutex.TryLock() {
 		c.JSON(http.StatusOK, gin.H{
@@ -63,20 +61,19 @@ func PrePay(c *gin.Context) {
 	}
 	//订单号
 	orderSn := service.OrderSnGen()
-	//用户手机号
-	user := session.Get("mobile")
+	fmt.Println(orderSn)
 	//付款的金额
 	payCount++
 	payAmount := payCount * 100
 	//生成订单,状态为支付中,保存入库
-	//list - key订单号，val为手机号-支付金额-购买数字-状态-日期
+	//list - key订单号，val为手机号-支付金额-购买数字-状态-日期-时间戳
 	//zSet - key订单号，范围查找在set中找，找到后从list中取详细信息
 	bucket := "order"
 	key := []byte(orderSn)
 	err = service.Conn.Update(func(tx *nutsdb.Tx) error {
 		//手机号
 		err := tx.LPush(bucket, key,
-			[]byte(user.(string)),//手机号
+			[]byte(mobile.(string)),//手机号
 			[]byte(strconv.FormatInt(int64(payAmount), 10)),//支付金额
 			[]byte(figure),//购买数字
 			[]byte(service.OrderStatusPaying),//购买状态
@@ -112,58 +109,65 @@ func PrePay(c *gin.Context) {
 
 	}(bucket,orderSn)
 	//todo 获取商户支付参数,调用预下单接口(不返JSON，直接redirect)
-	client, err := service.NewWechatPayClient()
-	if err != nil {
-		log.Fatalf("new wechat pay client err:%s", err)
-	}
-	goodsDetail := make([]h5.GoodsDetail,1)
-	goodsDetail = append(goodsDetail, h5.GoodsDetail{
-		MerchantGoodsId:  core.String(figure),
-		WechatpayGoodsId: nil,
-		GoodsName:        core.String(figure),
-		Quantity:         core.Int64(1),
-		UnitPrice:        core.Int64(int64(payAmount * 100)),
-	})
-	ctx := context.Background()
-	wxApi := h5.H5ApiService{Client: client}
-	resp, result, err := wxApi.Prepay(ctx, h5.PrepayRequest{
-		Appid:         core.String(service.AppID),
-		Mchid:         core.String(service.MchID),
-		Description:   core.String(mobile.(string) + "-" + figure + "-" + strconv.FormatInt(int64(payAmount), 10)),
-		OutTradeNo:    core.String(orderSn),
-		TimeExpire:    core.Time(time.Now()),
-		Attach:        core.String("自定义数据说明"),
-		NotifyUrl:     core.String(service.NotifyUrl),
-		GoodsTag:      core.String(""),
-		LimitPay:      make([]string, 1),
-		SupportFapiao: core.Bool(false),
-		Amount: &h5.Amount{
-			Total: core.Int64(int64(payAmount)),
-		},
-		Detail: &h5.Detail{
-			InvoiceId: core.String(orderSn),
-			GoodsDetail: goodsDetail,
-		},
-		SceneInfo:&h5.SceneInfo{},
-		SettleInfo: &h5.SettleInfo{},
-	})
-	if err != nil {
-		log.Fatalln(err)
-	}
-	log.Println(resp)
-	log.Println(result)
+	//client, err := service.NewWechatPayClient()
+	//if err != nil {
+	//	log.Fatalf("new wechat pay client err:%s", err)
+	//}
+	//goodsDetail := make([]h5.GoodsDetail,1)
+	//goodsDetail = append(goodsDetail, h5.GoodsDetail{
+	//	MerchantGoodsId:  core.String(figure),
+	//	WechatpayGoodsId: nil,
+	//	GoodsName:        core.String(figure),
+	//	Quantity:         core.Int64(1),
+	//	UnitPrice:        core.Int64(int64(payAmount * 100)),
+	//})
+	//ctx := context.Background()
+	//wxApi := h5.H5ApiService{Client: client}
+	//resp, result, err := wxApi.Prepay(ctx, h5.PrepayRequest{
+	//	Appid:         core.String(service.AppID),
+	//	Mchid:         core.String(service.MchID),
+	//	Description:   core.String(mobile.(string) + "-" + figure + "-" + strconv.FormatInt(int64(payAmount), 10)),
+	//	OutTradeNo:    core.String(orderSn),
+	//	TimeExpire:    core.Time(time.Now()),
+	//	Attach:        core.String("自定义数据说明"),
+	//	NotifyUrl:     core.String(service.NotifyUrl),
+	//	GoodsTag:      core.String(""),
+	//	LimitPay:      make([]string, 1),
+	//	SupportFapiao: core.Bool(false),
+	//	Amount: &h5.Amount{
+	//		Total: core.Int64(int64(payAmount)),
+	//	},
+	//	Detail: &h5.Detail{
+	//		InvoiceId: core.String(orderSn),
+	//		GoodsDetail: goodsDetail,
+	//	},
+	//	SceneInfo:&h5.SceneInfo{},
+	//	SettleInfo: &h5.SettleInfo{},
+	//})
+	//if err != nil {
+	//	log.Fatalln(err)
+	//}
+	//log.Println(resp)
+	//log.Println(result)
+	//fixme 临时测试，用完删除 {
+	service.GameInstance.CurrentPlayer = mobile.(string)
+	service.GameInstance.PayCount++
+	// }
 
 	c.JSON(http.StatusOK, gin.H{
 		"code": 0,
 		"msg" : "拉起支付成功",
-		"data": "",//todo 微信返回的预支付下单地址
+		"data": orderSn,//todo 微信返回的预支付下单地址
 	})
 }
 
 func Notify(c *gin.Context){
 	var orderSn,resultCode string
-	orderSn = "32393932902039"//fixme 模拟微信回调中的 out_trade_no
-	//resultCode := "success" //fixme 模拟微信回调中的结果
+	//fixme 测试用，用完删除 {
+	orderSn =  c.PostForm("sn")
+	resultCode = c.PostForm("result")
+	//fixme }
+
 	//todo 微信验签
 	bucket := "order"
 	key := []byte(orderSn)
@@ -172,6 +176,7 @@ func Notify(c *gin.Context){
 		payState = service.OrderStatusPaid
 	} else {
 		payState = service.OrderStatusCancel
+		service.GameInstance.PlayMutex = false
 	}
 	//更新订单状态
 	err := service.Conn.Update(func(tx *nutsdb.Tx) error {
@@ -186,7 +191,6 @@ func Notify(c *gin.Context){
 	}
 	// 如果支付失败，解锁游戏，其他认可以购买
 	if resultCode != "SUCCESS" {
-		service.GameInstance.PlayMutex = false
 		//ret := gin.H{
 		//	"return_code" : "SUCCESS",
 		//	"return_msg": "",
@@ -195,22 +199,23 @@ func Notify(c *gin.Context){
 		return
 	}
 	// 根据订单号查询所购买的figure
-	var paidFigure,mobile string
+	var mobile string
 	err = service.Conn.View(func(tx *nutsdb.Tx) error {
 		orderInfo, err := tx.LRange(bucket, key, 0, -1)
 		if err != nil {
 			return err
 		}
-		paidFigure = string(orderInfo[2])
+		mobile = string(orderInfo[0])
 		return nil
 	})
 	if err != nil {
 		return
 	}
 	// 订单记录下当前游戏中购买的
-	service.OrderInstance.PaidFigure = paidFigure
 	service.GameInstance.CurrentPlayer = mobile
 	service.GameInstance.PayCount++
 	// todo return response微信
-
+	//fixme 临时测试 {
+	c.String(http.StatusOK,"success")
+	//fixme }
 }

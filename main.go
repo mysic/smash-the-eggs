@@ -43,15 +43,12 @@ func main(){
 	RegisterRouter(router)
 	// 实例化游戏
 	service.GameInstance = &service.Game{
-		Figures: []any{},
-		SmashedFigures: []any{},
+		Figures: []int64{},
+		SmashedFigures: []int64{},
 		CurrentPlayer: "",
 		PayCount:0,
 		Status: false,
 		PlayMutex: false,
-	}
-	service.OrderInstance = &service.Order{
-		PaidFigure: "",
 	}
 	// 启动http服务
 	err = router.Run(":8668")

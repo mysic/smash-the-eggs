@@ -116,9 +116,9 @@ func Start(c *gin.Context) {
 		return
 	}
 	var i uint64
-	var figures []any
+	var figures []int64
 	for i = 1;i <= figuresNumber; i++ {
-		figures = append(figures, i)
+		figures = append(figures, int64(i))
 	}
 	service.GameInstance.Figures = figures
 	service.GameInstance.Status = true
@@ -129,8 +129,8 @@ func Start(c *gin.Context) {
 }
 //Stop 结束游戏
 func Stop(c *gin.Context) {
-	service.GameInstance.Figures =  []any{}
-	service.GameInstance.SmashedFigures = []any{}
+	service.GameInstance.Figures =  []int64{}
+	service.GameInstance.SmashedFigures = []int64{}
 	service.GameInstance.CurrentPlayer = ""
 	service.GameInstance.Status = false
 	c.JSON(http.StatusOK, gin.H{
@@ -140,7 +140,7 @@ func Stop(c *gin.Context) {
 }
 //Reset 重置游戏
 func Reset(c *gin.Context) {
-	service.GameInstance.SmashedFigures = []interface{}{}
+	service.GameInstance.SmashedFigures = []int64{}
 	service.GameInstance.CurrentPlayer = ""
 	c.JSON(http.StatusOK, gin.H{
 		"code":0,

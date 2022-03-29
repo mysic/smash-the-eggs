@@ -6,6 +6,7 @@ import (
 	"math/rand"
 	"net/http"
 	"smash-golden-eggs/service"
+	"strconv"
 	"time"
 )
 
@@ -15,9 +16,9 @@ type smashForm struct {
 
 // Game 获取游戏信息
 func Game(c *gin.Context) {
-	data := make(map[string][]any)
-	data["figures"] = make([]any,1)
-	data["smashed_figures"] = make([]any,1)
+	data := make(map[string][]int64)
+	data["figures"] = make([]int64,1)
+	data["smashed_figures"] = make([]int64,1)
 	data["figures"] = service.GameInstance.Figures
 	data["smashed_figures"] = service.GameInstance.SmashedFigures
 	c.JSON(http.StatusOK, gin.H{
@@ -27,11 +28,12 @@ func Game(c *gin.Context) {
 	})
 }
 
-// Play 获取随机排序的payItems
+// Play 获取随机排序的Figures
 func Play(c *gin.Context){
-	data := make(map[string][]any)
-	data["figures"] = make([]any,1)
-	data["smashed_figures"] = make([]any,1)
+	//todo 验证用户订单是否支付成功
+	data := make(map[string][]int64)
+	data["figures"] = make([]int64,1)
+	data["smashed_figures"] = make([]int64,1)
 	data["figures"] = service.GameInstance.Figures
 	data["smashed_figures"] = service.GameInstance.SmashedFigures
 	shuffle(data["figures"])
@@ -54,8 +56,11 @@ func Smash(c *gin.Context) {
 		return
 	}
 	session := sessions.Default(c)
-	paidFigure := session.Get("paidFigure").(string)
+	paidFigure, _ := strconv.ParseInt(session.Get("figure").(string), 0,0)
 	//todo 开启计时器倒计时，如果超过时间未重新支付，则解锁service.GameInstance.PlayMutex
+	// 游戏结束10秒内未支付，则解锁。支付了则不解锁
+
+
 	go func() {
 		time.Sleep(time.Second * 10)
 		//err := service.Conn.View(func(tx *nutsdb.Tx) error {
@@ -74,8 +79,12 @@ func Smash(c *gin.Context) {
 		//}
 
 	}()
-	//todo 从Game.Figures中删除所砸的金蛋，将砸掉的金蛋序号写入Game.SmashedFigures中 （事务处理）
-	smashFigure := c.PostForm("figure")
+	//从Game.Figures中删除所砸的金蛋
+	smashFigure,_ := strconv.ParseInt(c.PostForm("figure"),0,0)
+	service.GameInstance.Figures = service.RemoveSliceElement(service.GameInstance.Figures, smashFigure)
+	//将砸掉的金蛋序号写入Game.SmashedFigures中
+	service.GameInstance.SmashedFigures = append(service.GameInstance.SmashedFigures, smashFigure)
+
 	//对比接口post上来的smash数字是否一致，如果一致返回成功砸中，不一致返回没砸中
 	if paidFigure == smashFigure {
 		c.JSON(http.StatusOK, gin.H{
@@ -94,7 +103,7 @@ func Smash(c *gin.Context) {
 }
 
 
-func shuffle(slice []any) {
+func shuffle(slice []int64) {
 	r := rand.New(rand.NewSource(time.Now().Unix()))
 	for len(slice) > 0 {
 		n := len(slice)
