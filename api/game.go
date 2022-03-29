@@ -18,9 +18,7 @@ func Game(c *gin.Context) {
 	data := make(map[string][]any)
 	data["figures"] = make([]any,1)
 	data["smashed_figures"] = make([]any,1)
-	if service.GameInstance.Figures != nil {
-		data["figures"] = service.GameInstance.Figures
-	}
+	data["figures"] = service.GameInstance.Figures
 	data["smashed_figures"] = service.GameInstance.SmashedFigures
 	c.JSON(http.StatusOK, gin.H{
 		"code":0,
@@ -31,7 +29,9 @@ func Game(c *gin.Context) {
 
 // Play 获取随机排序的payItems
 func Play(c *gin.Context){
-	var data map[string][]any
+	data := make(map[string][]any)
+	data["figures"] = make([]any,1)
+	data["smashed_figures"] = make([]any,1)
 	data["figures"] = service.GameInstance.Figures
 	data["smashed_figures"] = service.GameInstance.SmashedFigures
 	shuffle(data["figures"])
