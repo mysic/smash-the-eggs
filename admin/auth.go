@@ -66,7 +66,6 @@ func Login (c *gin.Context) {
 
 }
 
-
 // Logout 登出
 func Logout (c *gin.Context) {
 	service.AdminState = false
@@ -117,7 +116,6 @@ func Password (c *gin.Context) {
 	});err != nil {}
 
 }
-
 // Captcha todo 验证码
 func Captcha (c *gin.Context) {
 

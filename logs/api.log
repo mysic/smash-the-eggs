@@ -1,0 +1,29 @@
+2022/03/25 10:20:54 D:/workspace/jindan/api/signup.go:17: 
+2022/03/25 10:35:03 D:/workspace/jindan/api/signup.go:17: 
+2022/03/25 10:44:55 D:/workspace/jindan/api/signup.go:17: 
+2022/03/25 10:45:01 D:/workspace/jindan/api/signup.go:17: 
+2022/03/25 11:35:50 C:/Users/86186/go/pkg/mod/github.com/gin-contrib/sessions@v0.0.4/sessions.go:133: [sessions] ERROR! sessions: invalid character in cookie name:  
+2022/03/25 11:37:13 C:/Users/86186/go/pkg/mod/github.com/gin-contrib/sessions@v0.0.4/sessions.go:133: [sessions] ERROR! sessions: invalid character in cookie name:  
+2022/03/25 11:46:55 D:/workspace/jindan/api/signup.go:17: 
+2022/03/25 11:46:55 C:/Users/86186/go/pkg/mod/github.com/gin-contrib/sessions@v0.0.4/sessions.go:133: [sessions] ERROR! sessions: invalid character in cookie name:  
+2022/03/25 11:47:52 D:/workspace/jindan/api/signup.go:17: 
+2022/03/25 15:04:47 D:/workspace/jindan/api/signup.go:17: {}
+2022/03/25 15:05:54 D:/workspace/jindan/api/signup.go:17: 18629303070
+2022/03/26 09:58:25 D:/workspace/jindan/main.go:105: bucket is empty
+2022/03/26 09:58:35 D:/workspace/jindan/main.go:105: bucket is empty
+2022/03/26 09:58:41 D:/workspace/jindan/main.go:105: bucket is empty
+2022/03/26 09:59:38 D:/workspace/jindan/main.go:105: bucket is empty
+2022/03/26 09:59:45 D:/workspace/jindan/main.go:105: bucket is empty
+2022/03/26 10:08:31 D:/workspace/jindan/main.go:110: tx not writable
+2022/03/26 10:12:39 D:/workspace/jindan/main.go:103: bucket is empty
+2022/03/26 10:33:56 D:/workspace/jindan/api/signup.go:16: 18629303070
+2022/03/26 10:47:32 D:/workspace/jindan/api/signup.go:16: 18629303070
+2022/03/26 10:49:52 D:/workspace/jindan/api/signup.go:16: 18629303070
+2022/03/26 10:50:01 D:/workspace/jindan/api/signup.go:16: 18629303070
+2022/03/26 10:58:11 D:/workspace/jindan/api/signup.go:16: 18629303070
+2022/03/26 20:10:37 D:/workspace/jindan/api/signup.go:16: 18629303070
+2022/03/27 18:07:39 /media/mysic/Data/workspace/jindan/main.go:54: listen tcp :80: bind: permission denied
+2022/03/29 12:16:48 D:/workspace/smash-golden-eggs/api/signup.go:16: 18629303070
+2022/03/29 12:16:48 C:/Users/86186/go/pkg/mod/github.com/gin-contrib/sessions@v0.0.4/sessions.go:133: [sessions] ERROR! securecookie: the value is not valid
+2022/03/29 12:16:51 C:/Users/86186/go/pkg/mod/github.com/gin-contrib/sessions@v0.0.4/sessions.go:133: [sessions] ERROR! securecookie: the value is not valid
+2022/03/29 12:19:18 D:/workspace/smash-golden-eggs/api/signup.go:16: 18629303070
