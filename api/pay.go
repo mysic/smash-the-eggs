@@ -1,9 +1,13 @@
 package api
 
 import (
+	"context"
 	"github.com/gin-contrib/sessions"
 	"github.com/gin-gonic/gin"
+	"github.com/wechatpay-apiv3/wechatpay-go/core"
+	"github.com/wechatpay-apiv3/wechatpay-go/services/payments/h5"
 	"github.com/xujiajun/nutsdb"
+	"log"
 	"net/http"
 	"smash-golden-eggs/service"
 	"strconv"
@@ -108,6 +112,47 @@ func PrePay(c *gin.Context) {
 
 	}(bucket,orderSn)
 	//todo 获取商户支付参数,调用预下单接口(不返JSON，直接redirect)
+	client, err := service.NewWechatPayClient()
+	if err != nil {
+		log.Fatalf("new wechat pay client err:%s", err)
+	}
+	goodsDetail := make([]h5.GoodsDetail,1)
+	goodsDetail = append(goodsDetail, h5.GoodsDetail{
+		MerchantGoodsId:  core.String(figure),
+		WechatpayGoodsId: nil,
+		GoodsName:        core.String(figure),
+		Quantity:         core.Int64(1),
+		UnitPrice:        core.Int64(int64(payAmount * 100)),
+	})
+	ctx := context.Background()
+	wxApi := h5.H5ApiService{Client: client}
+	resp, result, err := wxApi.Prepay(ctx, h5.PrepayRequest{
+		Appid:         core.String(service.AppID),
+		Mchid:         core.String(service.MchID),
+		Description:   core.String(mobile.(string) + "-" + figure + "-" + strconv.FormatInt(int64(payAmount), 10)),
+		OutTradeNo:    core.String(orderSn),
+		TimeExpire:    core.Time(time.Now()),
+		Attach:        core.String("自定义数据说明"),
+		NotifyUrl:     core.String(service.NotifyUrl),
+		GoodsTag:      core.String(""),
+		LimitPay:      make([]string, 1),
+		SupportFapiao: core.Bool(false),
+		Amount: &h5.Amount{
+			Total: core.Int64(int64(payAmount)),
+		},
+		Detail: &h5.Detail{
+			InvoiceId: core.String(orderSn),
+			GoodsDetail: goodsDetail,
+		},
+		SceneInfo:&h5.SceneInfo{},
+		SettleInfo: &h5.SettleInfo{},
+	})
+	if err != nil {
+		log.Fatalln(err)
+	}
+	log.Println(resp)
+	log.Println(result)
+
 	c.JSON(http.StatusOK, gin.H{
 		"code": 0,
 		"msg" : "拉起支付成功",

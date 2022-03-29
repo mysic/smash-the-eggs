@@ -15,25 +15,30 @@ type smashForm struct {
 
 // Game 获取游戏信息
 func Game(c *gin.Context) {
-	// todo 返回smashedFigure
-	payItems := service.GameInstance.Figures
+	data := make(map[string][]any)
+	data["figures"] = make([]any,1)
+	data["smashed_figures"] = make([]any,1)
+	data["figures"] = service.GameInstance.Figures
+	data["smashed_figures"] = service.GameInstance.SmashedFigures
 	c.JSON(http.StatusOK, gin.H{
 		"code":0,
 		"msg": "选一个心仪的数字买了吧",
-		"data": payItems,
+		"data": data,
 	})
 }
 
 // Play 获取随机排序的payItems
 func Play(c *gin.Context){
-	// todo 返回smashedFigure
-	payItems := service.GameInstance.Figures
-	shuffle(payItems)
-
+	data := make(map[string][]any)
+	data["figures"] = make([]any,1)
+	data["smashed_figures"] = make([]any,1)
+	data["figures"] = service.GameInstance.Figures
+	data["smashed_figures"] = service.GameInstance.SmashedFigures
+	shuffle(data["figures"])
 	c.JSON(http.StatusOK, gin.H{
 		"code":0,
 		"msg":"开始砸金蛋啦",
-		"data":payItems,
+		"data":data,
 	})
 }
 

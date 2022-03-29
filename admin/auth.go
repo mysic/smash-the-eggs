@@ -1,8 +1,6 @@
 package admin
 
 import (
-	"fmt"
-	"github.com/gin-contrib/sessions"
 	"github.com/gin-gonic/gin"
 	"github.com/xujiajun/nutsdb"
 	"golang.org/x/crypto/bcrypt"
@@ -23,15 +21,13 @@ type passwordForm struct {
 
 // Login 登入
 func Login (c *gin.Context) {
-	session := sessions.Default(c)
-	if isAdmin := session.Get("isAdmin"); isAdmin == "yes" {
+	if service.AdminState == true {
 		c.JSON(http.StatusOK, gin.H{
 			"code": 0,
 			"msg":"已经登录了",
 		})
 		return
 	}
-
 	var params loginForm
 	if err := c.ShouldBind(&params); err != nil {
 		c.JSON(http.StatusOK, gin.H{
@@ -62,17 +58,7 @@ func Login (c *gin.Context) {
 		})
 		return 
 	}
-
-	session.Set("isAdmin","yes")
-	err = session.Save()
-	if err != nil {
-		c.JSON(http.StatusOK, gin.H{
-			"code": -1,
-			"msg":"登录失败",
-			"data":err.Error(),
-		})
-		return
-	}
+	service.AdminState = true
 	c.JSON(http.StatusOK, gin.H{
 		"code": 0,
 		"msg":"登录成功",
@@ -80,15 +66,10 @@ func Login (c *gin.Context) {
 
 }
 
+
 // Logout 登出
 func Logout (c *gin.Context) {
-	session := sessions.Default(c)
-	session.Clear()
-	err := session.Save()
-	if err != nil {
-		fmt.Println(err.Error())
-		return
-	}
+	service.AdminState = false
 	c.JSON(http.StatusOK, gin.H{
 		"code": 0,
 		"msg":"成功登出",
