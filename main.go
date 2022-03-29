@@ -23,6 +23,7 @@ func main(){
 	// 启动session
 	store := cookie.NewStore([]byte("jfa8389sf729ap(*&DJA(#xl"))
 	router.Use(sessions.Sessions("smashGoldenEggs", store))
+	service.AdminState = false
 	// 启动db
 	dbConfig := nutsdb.DefaultOptions
 	dbConfig.Dir = "data/db"

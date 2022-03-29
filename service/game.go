@@ -1,7 +1,7 @@
 package service
 
 var GameInstance *Game
-
+var AdminState bool
 type Game struct {
 	Figures        []any//生成的购买选项
 	SmashedFigures []any//已经砸开的选项
