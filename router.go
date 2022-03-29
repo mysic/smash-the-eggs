@@ -45,7 +45,7 @@ func RegisterRouter(r *gin.Engine) {
 		//提交后台登入
 		adminRouter.POST("/login", admin.Login)
 		//修改管理员密码
-		adminRouter.POST("/password", admin.Password)
+		adminRouter.POST("/password", middleware.AdminAuthentication(), admin.Password)
 		//获取后台仪表盘数据
 		adminRouter.GET("/", middleware.AdminAuthentication(), admin.Dashboard)
 		//提交后台登出

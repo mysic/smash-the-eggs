@@ -52,13 +52,6 @@ func Login (c *gin.Context) {
 			return err
 		}
 		dbPassword = val.Value
-		all ,err := tx.GetAll(bucket)
-		if err != nil {
-			return err
-		}
-		for _,v := range all {
-			fmt.Println(v.Key,v.Value)
-		}
 		return nil
 	});err != nil {}
 	err := bcrypt.CompareHashAndPassword(dbPassword, password)
@@ -83,6 +76,22 @@ func Login (c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{
 		"code": 0,
 		"msg":"登录成功",
+	})
+
+}
+
+// Logout 登出
+func Logout (c *gin.Context) {
+	session := sessions.Default(c)
+	session.Clear()
+	err := session.Save()
+	if err != nil {
+		fmt.Println(err.Error())
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{
+		"code": 0,
+		"msg":"成功登出",
 	})
 }
 
@@ -126,25 +135,6 @@ func Password (c *gin.Context) {
 		return tx.Put(bucket, key, val, 0)
 	});err != nil {}
 
-}
-
-// Logout 登出
-func Logout (c *gin.Context) {
-	session := sessions.Default(c)
-	session.Options(sessions.Options{MaxAge: -1})
-	session.Clear()
-	err := session.Save()
-	if err != nil {
-		c.JSON(http.StatusOK, gin.H{
-			"code": 0,
-			"msg":"登出失败",
-			"data":err.Error(),
-		})
-	}
-	c.JSON(http.StatusOK, gin.H{
-		"code": 0,
-		"msg":"成功登出",
-	})
 }
 
 // Captcha todo 验证码

@@ -24,8 +24,7 @@ func Authentication() gin.HandlerFunc {
 func AdminAuthentication() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		session := sessions.Default(c)
-		var isAdmin interface{}
-		isAdmin = session.Get("isAdmin")
+		isAdmin := session.Get("isAdmin")
 		if isAdmin == nil {
 			c.AbortWithStatusJSON(http.StatusOK, gin.H{
 				"code":-1,
@@ -33,7 +32,6 @@ func AdminAuthentication() gin.HandlerFunc {
 			})
 			return
 		}
-
 		if isAdmin.(string) != "yes" {
 			c.AbortWithStatusJSON(http.StatusOK, gin.H{
 				"code":-1,

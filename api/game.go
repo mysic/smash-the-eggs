@@ -15,6 +15,7 @@ type smashForm struct {
 
 // Game 获取游戏信息
 func Game(c *gin.Context) {
+	// todo 返回smashedFigure
 	payItems := service.GameInstance.Figures
 	c.JSON(http.StatusOK, gin.H{
 		"code":0,
@@ -25,6 +26,7 @@ func Game(c *gin.Context) {
 
 // Play 获取随机排序的payItems
 func Play(c *gin.Context){
+	// todo 返回smashedFigure
 	payItems := service.GameInstance.Figures
 	shuffle(payItems)
 
@@ -68,9 +70,9 @@ func Smash(c *gin.Context) {
 
 	}()
 	//todo 从Game.Figures中删除所砸的金蛋，将砸掉的金蛋序号写入Game.SmashedFigures中 （事务处理）
-
+	smashFigure := c.PostForm("figure")
 	//对比接口post上来的smash数字是否一致，如果一致返回成功砸中，不一致返回没砸中
-	if paidFigure == c.PostForm("figure") {
+	if paidFigure == smashFigure {
 		c.JSON(http.StatusOK, gin.H{
 			"code" : 0,
 			"msg":"砸中啦",
