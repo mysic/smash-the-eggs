@@ -29,15 +29,15 @@ func RegisterRouter(r *gin.Engine) {
 
 		apiRouter.POST("/signup", api.MobileSignUp)
 		//获取本轮游戏内容
-		apiRouter.GET("/game", middleware.Authentication(), api.Game)
+		apiRouter.GET("/game", middleware.Authentication(), middleware.GameState(), api.Game)
 		//针对用户所选的数字调微信预支付
-		apiRouter.POST("/prepay", middleware.Authentication(), api.PrePay)
+		apiRouter.POST("/prepay", middleware.Authentication(), middleware.GameState(), api.PrePay)
 		//微信支付回调
 		apiRouter.POST("/notify", api.Notify)
 		// 开始游戏初始化
-		apiRouter.GET("/play", middleware.Authentication(), api.Play)
+		apiRouter.GET("/play", middleware.Authentication(), middleware.GameState(), api.Play)
 		// 用户砸蛋上报，返回是否砸中数字的结果
-		apiRouter.POST("/smash", middleware.Authentication(), api.Smash)
+		apiRouter.POST("/smash", middleware.Authentication(), middleware.GameState(), api.Smash)
 	}
 
 	adminRouter := r.Group("/admin")

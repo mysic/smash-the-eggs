@@ -10,7 +10,7 @@ func Authentication() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		session := sessions.Default(c)
 		var isAdmin interface{}
-		if isAdmin = session.Get("isAdmin"); isAdmin == nil {
+		if isAdmin = session.Get("mobile"); isAdmin == nil {
 			c.AbortWithStatusJSON(http.StatusOK, gin.H{
 				"code":-1,
 				"msg":"未登入，请先登入",

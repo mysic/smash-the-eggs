@@ -1,7 +1,6 @@
 package admin
 
 import (
-	"fmt"
 	"github.com/gin-contrib/sessions"
 	"github.com/gin-gonic/gin"
 	"github.com/xujiajun/nutsdb"
@@ -52,13 +51,6 @@ func Login (c *gin.Context) {
 			return err
 		}
 		dbPassword = val.Value
-		all ,err := tx.GetAll(bucket)
-		if err != nil {
-			return err
-		}
-		for _,v := range all {
-			fmt.Println(v.Key,v.Value)
-		}
 		return nil
 	});err != nil {}
 	err := bcrypt.CompareHashAndPassword(dbPassword, password)
