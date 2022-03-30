@@ -99,7 +99,6 @@ func PrePay(c *gin.Context) {
 	if err != nil {
 		return 
 	}
-	//todo
 	go func(bucket,orderSn string) {
 		time.Sleep(time.Second * 60)
 		//todo 调用微信关闭订单接口

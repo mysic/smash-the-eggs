@@ -30,7 +30,6 @@ func Game(c *gin.Context) {
 
 // Play 获取随机排序的Figures
 func Play(c *gin.Context){
-	//todo 验证用户订单是否支付成功
 	data := make(map[string][]int64)
 	data["figures"] = make([]int64,1)
 	data["smashed_figures"] = make([]int64,1)

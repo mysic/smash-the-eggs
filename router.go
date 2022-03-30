@@ -35,9 +35,9 @@ func RegisterRouter(r *gin.Engine) {
 		//微信支付回调
 		apiRouter.POST("/notify", api.Notify)
 		// 开始游戏初始化
-		apiRouter.GET("/play", middleware.Authentication(), middleware.GameState(), api.Play)
+		apiRouter.GET("/play", middleware.Authentication(), middleware.GameState(), middleware.OrderState(), api.Play)
 		// 用户砸蛋上报，返回是否砸中数字的结果
-		apiRouter.POST("/smash", middleware.Authentication(), middleware.GameState(), api.Smash)
+		apiRouter.POST("/smash", middleware.Authentication(), middleware.GameState(), middleware.OrderState(), api.Smash)
 	}
 
 	adminRouter := r.Group("/admin")
