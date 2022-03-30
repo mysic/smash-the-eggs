@@ -28,6 +28,7 @@ func PrePay(c *gin.Context) {
 	session := sessions.Default(c)
 	//用户手机号
 	mobile := session.Get("mobile")
+
 	if (service.GameInstance.PlayMutex == true && mobile != service.GameInstance.CurrentPlayer) || !service.Mutex.TryLock() {
 		c.JSON(http.StatusOK, gin.H{
 			"code": -1,
@@ -37,6 +38,17 @@ func PrePay(c *gin.Context) {
 	}
 	service.GameInstance.PlayMutex = true //tips 此变量的更新在最终游戏结束，当前用户时限内未购买的情况下进行解锁
 	service.Mutex.Unlock()
+	// 用户打算购买的金蛋
+	figure, _ := strconv.ParseInt(c.PostForm("figure"),0,0)
+	if service.FindFigureInSlice(service.GameInstance.SmashedFigures, figure) >=0 {
+		c.JSON(http.StatusOK, gin.H{
+			"code": -1,
+			"msg":"这个金蛋已经砸过了，换一个砸吧",
+		})
+		return
+	}
+
+	service.OrderStatus = service.OrderStatusPaying
 	service.GameInstance.CurrentPlayer = mobile.(string)
 	var params prePayForm
 	if err := c.ShouldBind(&params); err != nil {
@@ -48,7 +60,6 @@ func PrePay(c *gin.Context) {
 		return
 	}
 	// 用户选的金蛋figure保存到session
-	figure := c.PostForm("figure")
 	session.Set("figure", figure)
 	err := session.Save()
 	if err != nil {
@@ -61,7 +72,6 @@ func PrePay(c *gin.Context) {
 	}
 	//订单号
 	orderSn := service.OrderSnGen()
-	fmt.Println(orderSn)
 	//付款的金额
 	payCount++
 	payAmount := payCount * 100
@@ -75,7 +85,7 @@ func PrePay(c *gin.Context) {
 		err := tx.LPush(bucket, key,
 			[]byte(mobile.(string)),//手机号
 			[]byte(strconv.FormatInt(int64(payAmount), 10)),//支付金额
-			[]byte(figure),//购买数字
+			[]byte(strconv.FormatInt(figure,10)),//购买数字
 			[]byte(service.OrderStatusPaying),//购买状态
 			[]byte(time.Now().String()),
 			[]byte(strconv.FormatInt(time.Now().Unix(),10)),//时间戳
@@ -92,19 +102,9 @@ func PrePay(c *gin.Context) {
 	//todo
 	go func(bucket,orderSn string) {
 		time.Sleep(time.Second * 60)
-		err := service.Conn.View(func(tx *nutsdb.Tx) error {
-			orderInfo, err := tx.LRange(bucket, []byte(orderSn), 0, -1)
-			if err != nil {
-				return err
-			}
-			if string(orderInfo[3]) != service.OrderStatusPaid {
-				service.GameInstance.PlayMutex = false
-			}
-
-			return nil
-		})
-		if err != nil {
-			return
+		//todo 调用微信关闭订单接口
+		if service.OrderStatus != service.OrderStatusPaid {
+			service.GameInstance.PlayMutex = false
 		}
 
 	}(bucket,orderSn)
@@ -152,7 +152,7 @@ func PrePay(c *gin.Context) {
 	//fixme 临时测试，用完删除 {
 	service.GameInstance.CurrentPlayer = mobile.(string)
 	service.GameInstance.PayCount++
-	// }
+	//fixme }
 
 	c.JSON(http.StatusOK, gin.H{
 		"code": 0,
@@ -162,7 +162,7 @@ func PrePay(c *gin.Context) {
 }
 
 func Notify(c *gin.Context){
-	var orderSn,resultCode string
+	var orderSn,resultCode,payState string
 	//fixme 测试用，用完删除 {
 	orderSn =  c.PostForm("sn")
 	resultCode = c.PostForm("result")
@@ -171,13 +171,13 @@ func Notify(c *gin.Context){
 	//todo 微信验签
 	bucket := "order"
 	key := []byte(orderSn)
-	payState := service.OrderStatusPaying
 	if resultCode == "SUCCESS" {
 		payState = service.OrderStatusPaid
 	} else {
 		payState = service.OrderStatusCancel
 		service.GameInstance.PlayMutex = false
 	}
+	service.OrderStatus = payState
 	//更新订单状态
 	err := service.Conn.Update(func(tx *nutsdb.Tx) error {
 		err := tx.LSet(bucket, key, 3, []byte(payState))
@@ -202,10 +202,13 @@ func Notify(c *gin.Context){
 	var mobile string
 	err = service.Conn.View(func(tx *nutsdb.Tx) error {
 		orderInfo, err := tx.LRange(bucket, key, 0, -1)
+		for _, item := range orderInfo {
+			fmt.Println(string(item))
+		}
 		if err != nil {
 			return err
 		}
-		mobile = string(orderInfo[0])
+		mobile = string(orderInfo[5]) //val为手机号-支付金额-购买数字-状态-日期-时间戳
 		return nil
 	})
 	if err != nil {

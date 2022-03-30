@@ -24,5 +24,14 @@ func RemoveSliceElement(slice []int64, elem int64) []int64{
 	return slice
 }
 
+func FindFigureInSlice(slice []int64, val int64) int {
+	for i, item := range slice {
+		if item == val {
+			return i
+		}
+	}
+	return -1
+}
+
 
 

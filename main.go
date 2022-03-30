@@ -50,6 +50,8 @@ func main(){
 		Status: false,
 		PlayMutex: false,
 	}
+	//初始化订单状态
+	service.OrderStatus = service.OrderStatusNoneExist //订单未创建
 	// 启动http服务
 	err = router.Run(":8668")
 	if err != nil {

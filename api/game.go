@@ -56,35 +56,28 @@ func Smash(c *gin.Context) {
 		return
 	}
 	session := sessions.Default(c)
-	paidFigure, _ := strconv.ParseInt(session.Get("figure").(string), 0,0)
-	//todo 开启计时器倒计时，如果超过时间未重新支付，则解锁service.GameInstance.PlayMutex
-	// 游戏结束10秒内未支付，则解锁。支付了则不解锁
-
-
-	go func() {
-		time.Sleep(time.Second * 10)
-		//err := service.Conn.View(func(tx *nutsdb.Tx) error {
-		//	orderInfo, err := tx.LRange(bucket, []byte(orderSn), 0, -1)
-		//	if err != nil {
-		//		return err
-		//	}
-		//	if string(orderInfo[3]) != service.OrderStatusPaid {
-		//		service.GameInstance.PlayMutex = false
-		//	}
-		//
-		//	return nil
-		//})
-		//if err != nil {
-		//	return
-		//}
-
-	}()
-	//从Game.Figures中删除所砸的金蛋
+	paidFigure := session.Get("figure").(int64)
 	smashFigure,_ := strconv.ParseInt(c.PostForm("figure"),0,0)
+	//判断提交的数字是否是已经砸过的数字
+	if service.FindFigureInSlice(service.GameInstance.SmashedFigures, smashFigure) >= 0 {
+		c.JSON(http.StatusOK, gin.H{
+			"code" : 0,
+			"msg": strconv.FormatInt(smashFigure,10) + "已经砸过了",
+			"data":"",
+		})
+		return
+	}
+	//从Game.Figures中删除所砸的金蛋
 	service.GameInstance.Figures = service.RemoveSliceElement(service.GameInstance.Figures, smashFigure)
 	//将砸掉的金蛋序号写入Game.SmashedFigures中
 	service.GameInstance.SmashedFigures = append(service.GameInstance.SmashedFigures, smashFigure)
-
+	//倒计时10秒，如果没有购买则解锁游戏
+	go func() {
+		time.Sleep(time.Second * 10)
+		if service.OrderStatus != service.OrderStatusPaid {
+			service.GameInstance.PlayMutex = false
+		}
+	}()
 	//对比接口post上来的smash数字是否一致，如果一致返回成功砸中，不一致返回没砸中
 	if paidFigure == smashFigure {
 		c.JSON(http.StatusOK, gin.H{
