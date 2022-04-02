@@ -12,10 +12,13 @@ import (
 )
 
 const (
-	LogFile  = "logs/api.log"
+	LogFile  = "data/logs/api.log"
 )
 
+
 func main(){
+	//fixme 发布时用release模式
+	//gin.SetMode(gin.ReleaseMode)
 	var err error
 	logFile, _ := os.OpenFile(LogFile, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0644)
 	log.SetOutput(logFile)

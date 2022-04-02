@@ -37,7 +37,7 @@ func Login (c *gin.Context) {
 		})
 		return
 	}
-	bucket := "admin"
+	bucket := service.AdminBucket
 	username := []byte(c.PostForm("username"))
 	password := []byte(c.PostForm("password"))
 	var dbPassword []byte
@@ -79,7 +79,7 @@ func Logout (c *gin.Context) {
 func Password (c *gin.Context) {
 	var params passwordForm
 	var err error
-	bucket := "admin"
+	bucket := service.AdminBucket
 	key := []byte("admin")
 	if err := c.ShouldBind(&params); err != nil {
 		c.JSON(http.StatusOK, gin.H{

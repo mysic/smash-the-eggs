@@ -34,7 +34,6 @@ func MobileSignUp(c *gin.Context) {
 	}
 	//session 1小时超时设置
 	session.Options(sessions.Options{MaxAge: 3600})
-	session.Set("isAdmin","no")
 	session.Set("mobile",params.Mobile)
 	err := session.Save()
 	if err != nil {
