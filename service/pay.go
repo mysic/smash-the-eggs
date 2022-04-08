@@ -17,7 +17,7 @@ var (
 	ApiClientKeyPath string = ""
 	AppID string = ""
 	NotifyUrl string = ""
-
+	PayState chan bool
 )
 
 func NewWechatPayClient() (*core.Client,error){
