@@ -6,6 +6,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/xujiajun/nutsdb"
 	"net/http"
+	"smash-golden-eggs/admin"
 	"smash-golden-eggs/service"
 	"strconv"
 	"time"
@@ -19,6 +20,10 @@ func PrePay(c *gin.Context) {
 	//判断金蛋是否已经全部购买完
 	payCount := service.GameInstance.PayCount
 	if 0 >= len(service.GameInstance.Figures) + len(service.GameInstance.SmashedFigures) {
+		go func() {
+			time.Sleep(time.Second * 1)
+			admin.Reset(c)
+		}()
 		c.JSON(http.StatusOK, gin.H{
 			"code": -1,
 			"msg":"金蛋已经全部砸开了，请等待下一轮新游戏吧",

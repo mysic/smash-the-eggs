@@ -13,7 +13,6 @@ type mobileForm struct {
 
 func MobileSignUp(c *gin.Context) {
 	var params mobileForm
-	log.Println(c.PostForm("mobile"))
 	if err := c.ShouldBind(&params); err != nil {
 		c.JSON(http.StatusOK, gin.H{
 			"code": -1,

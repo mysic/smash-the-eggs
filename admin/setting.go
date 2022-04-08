@@ -100,19 +100,28 @@ func Setting(c *gin.Context) {
 
 //Start 开始游戏
 func Start(c *gin.Context) {
-	figures,err := figureInit()
+	err := gameInit(c)
 	if err != nil {
 		c.JSON(http.StatusOK, gin.H{
 			"code":-1,
-			"msg": "游戏开启错误",
+			"msg": "游戏开启失败，请联系管理员",
 		})
+		return
 	}
-	service.GameInstance.Figures = figures
-	service.GameInstance.State = true
 	c.JSON(http.StatusOK, gin.H{
 		"code":0,
 		"msg": "游戏已开启",
 	})
+}
+
+func gameInit(c *gin.Context) error {
+	figures,err := figureInit()
+	if err != nil {
+		return err
+	}
+	service.GameInstance.Figures = figures
+	service.GameInstance.State = true
+	return nil
 }
 
 func figureInit() ([]int64,error) {
@@ -159,7 +168,14 @@ func Reset(c *gin.Context) {
 	service.GameInstance.CurrentPlayer = ""
 	service.GameInstance.PayCount = 0
 	service.GameInstance.PlayMutex = false
-	Start(c)
+	err := gameInit(c)
+	if err != nil {
+		c.JSON(http.StatusOK, gin.H{
+			"code":-1,
+			"msg": "游戏重置失败，请联系管理员",
+		})
+		return
+	}
 	c.JSON(http.StatusOK, gin.H{
 		"code":0,
 		"msg": "游戏已重置",

@@ -63,7 +63,7 @@ func Smash(c *gin.Context) {
 		})
 		return
 	}
-	service.GameInstance.SmashPerm = false
+
 	var params smashForm
 	if err := c.ShouldBind(&params); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{
@@ -93,6 +93,7 @@ func Smash(c *gin.Context) {
 		})
 		return
 	}
+	service.GameInstance.SmashPerm = false
 	//从Game.Figures中删除所砸的金蛋
 	service.GameInstance.Figures = service.RemoveSliceElement(service.GameInstance.Figures, smashFigure)
 	//将砸掉的金蛋序号写入Game.SmashedFigures中
