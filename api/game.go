@@ -55,7 +55,13 @@ func Smash(c *gin.Context) {
 		return
 	}
 	session := sessions.Default(c)
-	paidFigure := session.Get("figure").(int64)
+	var paidFigure int64
+	if session.Get("figure") == nil {
+		paidFigure =  service.PaidFigure
+	} else {
+		paidFigure = session.Get("figure").(int64)
+	}
+
 	smashFigure,_ := strconv.ParseInt(c.PostForm("figure"),0,0)
 	//判断提交的数字是否是已经砸过的数字
 	if service.FindFigureInSlice(service.GameInstance.SmashedFigures, smashFigure) >= 0 {
@@ -73,9 +79,10 @@ func Smash(c *gin.Context) {
 	//倒计时10秒，如果没有购买则解锁游戏
 	go func() {
 		time.Sleep(time.Second * 10)
-		if service.OrderStatus != service.OrderStatusPaid {
+		if service.OrderState != service.OrderStatePaid {
 			service.GameInstance.PlayMutex = false
 		}
+
 	}()
 	//对比接口post上来的smash数字是否一致，如果一致返回成功砸中，不一致返回没砸中
 	if paidFigure == smashFigure {

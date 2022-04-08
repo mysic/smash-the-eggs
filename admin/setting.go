@@ -100,6 +100,22 @@ func Setting(c *gin.Context) {
 
 //Start 开始游戏
 func Start(c *gin.Context) {
+	figures,err := figureInit()
+	if err != nil {
+		c.JSON(http.StatusOK, gin.H{
+			"code":-1,
+			"msg": "游戏开启错误",
+		})
+	}
+	service.GameInstance.Figures = figures
+	service.GameInstance.State = true
+	c.JSON(http.StatusOK, gin.H{
+		"code":0,
+		"msg": "游戏已开启",
+	})
+}
+
+func figureInit() ([]int64,error) {
 	var figuresNumber uint64
 	if err := service.Conn.View(func(tx *nutsdb.Tx) error {
 		e,err := tx.Get(GameSettingBucket, []byte(NumberSetting))
@@ -113,26 +129,24 @@ func Start(c *gin.Context) {
 		}
 		return nil
 	});err != nil {
-		return
+		return nil, err
 	}
 	var i uint64
 	var figures []int64
 	for i = 1;i <= figuresNumber; i++ {
 		figures = append(figures, int64(i))
 	}
-	service.GameInstance.Figures = figures
-	service.GameInstance.Status = true
-	c.JSON(http.StatusOK, gin.H{
-		"code":0,
-		"msg": "游戏已开启",
-	})
+	return figures, nil
 }
+
 //Stop 结束游戏
 func Stop(c *gin.Context) {
 	service.GameInstance.Figures =  []int64{}
 	service.GameInstance.SmashedFigures = []int64{}
 	service.GameInstance.CurrentPlayer = ""
-	service.GameInstance.Status = false
+	service.GameInstance.PayCount = 0
+	service.GameInstance.State = false
+	service.GameInstance.PlayMutex = false
 	c.JSON(http.StatusOK, gin.H{
 		"code":0,
 		"msg": "游戏已停止",
@@ -140,8 +154,12 @@ func Stop(c *gin.Context) {
 }
 //Reset 重置游戏
 func Reset(c *gin.Context) {
+	service.GameInstance.Figures =  []int64{}
 	service.GameInstance.SmashedFigures = []int64{}
 	service.GameInstance.CurrentPlayer = ""
+	service.GameInstance.PayCount = 0
+	service.GameInstance.PlayMutex = false
+	Start(c)
 	c.JSON(http.StatusOK, gin.H{
 		"code":0,
 		"msg": "游戏已重置",

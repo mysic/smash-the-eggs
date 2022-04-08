@@ -8,7 +8,7 @@ import (
 
 func OrderState() gin.HandlerFunc{
 	return func(c *gin.Context) {
-		if service.OrderStatus != service.OrderStatusPaid {
+		if service.OrderState != service.OrderStatePaid {
 			c.JSON(http.StatusOK, gin.H{
 				"code":-1,
 				"msg": "订单还未支付",

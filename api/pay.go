@@ -48,7 +48,7 @@ func PrePay(c *gin.Context) {
 		return
 	}
 
-	service.OrderStatus = service.OrderStatusPaying
+	service.OrderState = service.OrderStatePaying
 	service.GameInstance.CurrentPlayer = mobile.(string)
 	var params prePayForm
 	if err := c.ShouldBind(&params); err != nil {
@@ -61,6 +61,7 @@ func PrePay(c *gin.Context) {
 	}
 	// 用户选的金蛋figure保存到session
 	session.Set("figure", figure)
+	service.PaidFigure = figure
 	err := session.Save()
 	if err != nil {
 		c.JSON(http.StatusOK, gin.H{
@@ -86,7 +87,7 @@ func PrePay(c *gin.Context) {
 			[]byte(mobile.(string)),//手机号
 			[]byte(strconv.FormatInt(int64(payAmount), 10)),//支付金额
 			[]byte(strconv.FormatInt(figure,10)),//购买数字
-			[]byte(service.OrderStatusPaying),//购买状态
+			[]byte(service.OrderStatePaying),//购买状态
 			[]byte(time.Now().String()),
 			[]byte(strconv.FormatInt(time.Now().Unix(),10)),//时间戳
 		)
@@ -101,9 +102,10 @@ func PrePay(c *gin.Context) {
 	}
 	go func(bucket,orderSn string) {
 		time.Sleep(time.Second * 60)
-		//todo 调用微信关闭订单接口
-		if service.OrderStatus != service.OrderStatusPaid {
+
+		if service.OrderState != service.OrderStatePaid {
 			service.GameInstance.PlayMutex = false
+			//todo 调用微信关闭订单接口
 		}
 
 	}(bucket,orderSn)
@@ -161,7 +163,7 @@ func PrePay(c *gin.Context) {
 }
 
 func Notify(c *gin.Context){
-	var orderSn,resultCode,payState string
+	var orderSn,resultCode string
 	//fixme 测试用，用完删除 {
 	orderSn =  c.PostForm("sn")
 	resultCode = c.PostForm("result")
@@ -171,15 +173,14 @@ func Notify(c *gin.Context){
 	bucket := "order"
 	key := []byte(orderSn)
 	if resultCode == "SUCCESS" {
-		payState = service.OrderStatusPaid
+		service.OrderState = service.OrderStatePaid
 	} else {
-		payState = service.OrderStatusCancel
+		service.OrderState = service.OrderStateCancel
 		service.GameInstance.PlayMutex = false
 	}
-	service.OrderStatus = payState
 	//更新订单状态
 	err := service.Conn.Update(func(tx *nutsdb.Tx) error {
-		err := tx.LSet(bucket, key, 3, []byte(payState))
+		err := tx.LSet(bucket, key, 3, []byte(service.OrderState))
 		if err != nil {
 			return err
 		}
@@ -188,7 +189,7 @@ func Notify(c *gin.Context){
 	if err != nil {
 		return
 	}
-	// 如果支付失败，解锁游戏，其他认可以购买
+	// 如果支付失败，解锁游戏，其他人可以购买
 	if resultCode != "SUCCESS" {
 		//ret := gin.H{
 		//	"return_code" : "SUCCESS",

@@ -6,14 +6,13 @@ import (
 )
 
 const (
-	OrderStatusNoneExist = "nothing"
-	OrderStatusPaying = "paying"
-	OrderStatusPaid = "paid"
-	OrderStatusCancel = "cancel"
+	OrderStateNoneExist = "nothing"
+	OrderStatePaying = "paying"
+	OrderStatePaid = "paid"
+	OrderStateCancel = "cancel"
 )
 
-var OrderStatus string
-
+var OrderState string
 func OrderSnGen() string {
 	node, _ := snowflake.NewNode(1)
 	return strconv.FormatInt(int64(node.Generate()), 10)

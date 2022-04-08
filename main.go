@@ -47,11 +47,11 @@ func main(){
 		SmashedFigures: []int64{},
 		CurrentPlayer: "",
 		PayCount:0,
-		Status: false,
+		State: false,
 		PlayMutex: false,
 	}
 	//初始化订单状态
-	service.OrderStatus = service.OrderStatusNoneExist //订单未创建
+	service.OrderState = service.OrderStateNoneExist //订单未创建
 	// 启动http服务
 	err = router.Run(":8668")
 	if err != nil {

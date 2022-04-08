@@ -19,7 +19,7 @@ func Dashboard (c *gin.Context) {
 	} else {
 		info["smashed"] = []any{}
 	}
-	info["status"] = service.GameInstance.Status
+	info["status"] = service.GameInstance.State
 	info["player"] = service.GameInstance.CurrentPlayer
 	c.JSON(http.StatusOK,gin.H{
 		"code":0,
