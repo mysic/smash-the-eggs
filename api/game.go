@@ -1,7 +1,6 @@
 package api
 
 import (
-	"github.com/gin-contrib/sessions"
 	"github.com/gin-gonic/gin"
 	"log"
 	"math/rand"
@@ -73,16 +72,9 @@ func Smash(c *gin.Context) {
 		})
 		return
 	}
-	session := sessions.Default(c)
-	var paidFigure int64
-	if session.Get("figure") == nil {
-		paidFigure =  service.PaidFigure
-	} else {
-		paidFigure = session.Get("figure").(int64)
-	}
 
 	smashFigure,_ := strconv.ParseInt(c.PostForm("figure"),0,0)
-	log.Println("paidFigure: " + strconv.FormatInt(paidFigure,10))
+	log.Println("paidFigure: " + strconv.FormatInt(service.PaidFigure,10))
 	log.Println("smashFigure: " + strconv.FormatInt(smashFigure,10))
 	//判断提交的数字是否是已经砸过的数字
 	if service.FindFigureInSlice(service.GameInstance.SmashedFigures, smashFigure) >= 0 {
@@ -107,7 +99,7 @@ func Smash(c *gin.Context) {
 
 	}()
 	//对比接口post上来的smash数字是否一致，如果一致返回成功砸中，不一致返回没砸中
-	if paidFigure == smashFigure {
+	if service.PaidFigure == smashFigure {
 		c.JSON(http.StatusOK, gin.H{
 			"code" : 0,
 			"msg":"砸中啦",

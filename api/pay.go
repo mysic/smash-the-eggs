@@ -64,8 +64,7 @@ func PrePay(c *gin.Context) {
 		})
 		return
 	}
-	// 用户选的金蛋figure保存到session
-	session.Set("figure", figure)
+	// 保存用户选的金蛋figure
 	service.PaidFigure = figure
 	err := session.Save()
 	if err != nil {
