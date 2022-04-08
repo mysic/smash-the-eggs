@@ -1,7 +1,6 @@
 package api
 
 import (
-	"fmt"
 	"github.com/gin-contrib/sessions"
 	"github.com/gin-gonic/gin"
 	"github.com/xujiajun/nutsdb"
@@ -79,7 +78,7 @@ func PrePay(c *gin.Context) {
 	//生成订单,状态为支付中,保存入库
 	//list - key订单号，val为手机号-支付金额-购买数字-状态-日期-时间戳
 	//zSet - key订单号，范围查找在set中找，找到后从list中取详细信息
-	bucket := "order"
+	bucket := service.OrderBucket
 	key := []byte(orderSn)
 	err = service.Conn.Update(func(tx *nutsdb.Tx) error {
 		//手机号
@@ -94,7 +93,7 @@ func PrePay(c *gin.Context) {
 		if err != nil {
 			return err
 		}
-		err = tx.ZAdd(bucket, key, float64(time.Now().Unix()), key)
+		err = tx.ZAdd(bucket, key, float64(time.Now().Unix()),[]byte(time.Now().String()))
 		return nil
 	})
 	if err != nil {
@@ -170,7 +169,7 @@ func Notify(c *gin.Context){
 	//fixme }
 
 	//todo 微信验签
-	bucket := "order"
+	bucket := service.OrderBucket
 	key := []byte(orderSn)
 	if resultCode == "SUCCESS" {
 		service.OrderState = service.OrderStatePaid
@@ -202,9 +201,6 @@ func Notify(c *gin.Context){
 	var mobile string
 	err = service.Conn.View(func(tx *nutsdb.Tx) error {
 		orderInfo, err := tx.LRange(bucket, key, 0, -1)
-		for _, item := range orderInfo {
-			fmt.Println(string(item))
-		}
 		if err != nil {
 			return err
 		}

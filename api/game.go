@@ -3,6 +3,7 @@ package api
 import (
 	"github.com/gin-contrib/sessions"
 	"github.com/gin-gonic/gin"
+	"log"
 	"math/rand"
 	"net/http"
 	"smash-golden-eggs/service"
@@ -63,6 +64,8 @@ func Smash(c *gin.Context) {
 	}
 
 	smashFigure,_ := strconv.ParseInt(c.PostForm("figure"),0,0)
+	log.Println("paidFigure: " + strconv.FormatInt(paidFigure,10))
+	log.Println("smashFigure: " + strconv.FormatInt(smashFigure,10))
 	//判断提交的数字是否是已经砸过的数字
 	if service.FindFigureInSlice(service.GameInstance.SmashedFigures, smashFigure) >= 0 {
 		c.JSON(http.StatusOK, gin.H{
