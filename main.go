@@ -52,6 +52,7 @@ func main(){
 		PayCount:0,
 		State: false,
 		PlayMutex: false,
+		SmashPerm: false,
 	}
 	//初始化订单状态
 	service.OrderState = service.OrderStateNoneExist //订单未创建

@@ -1,6 +1,7 @@
 package api
 
 import (
+	"errors"
 	"github.com/gin-contrib/sessions"
 	"github.com/gin-gonic/gin"
 	"github.com/xujiajun/nutsdb"
@@ -17,7 +18,7 @@ type prePayForm struct {
 func PrePay(c *gin.Context) {
 	//判断金蛋是否已经全部购买完
 	payCount := service.GameInstance.PayCount
-	if payCount >= len(service.GameInstance.Figures) + len(service.GameInstance.SmashedFigures) {
+	if 0 >= len(service.GameInstance.Figures) + len(service.GameInstance.SmashedFigures) {
 		c.JSON(http.StatusOK, gin.H{
 			"code": -1,
 			"msg":"金蛋已经全部砸开了，请等待下一轮新游戏吧",
@@ -179,6 +180,14 @@ func Notify(c *gin.Context){
 	}
 	//更新订单状态
 	err := service.Conn.Update(func(tx *nutsdb.Tx) error {
+		if items, err := tx.LRange(bucket,key,0,-1); err != nil {
+			return err
+		} else {
+			if string(items[3]) == service.OrderStatePaid {
+				return errors.New(string(key) + "订单已支付")
+			}
+		}
+
 		err := tx.LSet(bucket, key, 3, []byte(service.OrderState))
 		if err != nil {
 			return err
@@ -186,6 +195,7 @@ func Notify(c *gin.Context){
 		return nil
 	})
 	if err != nil {
+		c.String(http.StatusOK,err.Error())
 		return
 	}
 	// 如果支付失败，解锁游戏，其他人可以购买
@@ -213,6 +223,7 @@ func Notify(c *gin.Context){
 	// 订单记录下当前游戏中购买的
 	service.GameInstance.CurrentPlayer = mobile
 	service.GameInstance.PayCount++
+	service.GameInstance.SmashPerm = true
 	// todo return response微信
 	//fixme 临时测试 {
 	c.String(http.StatusOK,"success")

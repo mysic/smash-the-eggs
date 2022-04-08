@@ -6,10 +6,10 @@ import (
 )
 
 const (
-	OrderStateNoneExist = "nothing"
-	OrderStatePaying = "paying"
-	OrderStatePaid = "paid"
-	OrderStateCancel = "cancel"
+	OrderStateNoneExist = "nothing" //订单不存在
+	OrderStatePaying = "paying" //支付中
+	OrderStatePaid = "paid" // 已支付
+	OrderStateCancel = "cancel" //已取消
 )
 
 var OrderState string

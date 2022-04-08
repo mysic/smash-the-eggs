@@ -31,6 +31,14 @@ func Game(c *gin.Context) {
 
 // Play 获取随机排序的Figures
 func Play(c *gin.Context){
+	if !service.GameInstance.SmashPerm {
+		c.JSON(http.StatusOK, gin.H{
+			"code": -1,
+			"msg":"目前不能开始游戏，是不是还没有支付呢？",
+			"data":"",
+		})
+		return
+	}
 	data := make(map[string][]int64)
 	data["figures"] = make([]int64,1)
 	data["smashed_figures"] = make([]int64,1)
@@ -46,6 +54,16 @@ func Play(c *gin.Context){
 
 // Smash 验证用户砸中的payItem是否是他所购买的
 func Smash(c *gin.Context) {
+	//判断当前是否有砸金蛋的权限（1.支付获得权限）
+	if !service.GameInstance.SmashPerm {
+		c.JSON(http.StatusOK, gin.H{
+			"code": -1,
+			"msg":"目前不能砸金蛋，是不是还没有支付呢？",
+			"data":"",
+		})
+		return
+	}
+	service.GameInstance.SmashPerm = false
 	var params smashForm
 	if err := c.ShouldBind(&params); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{

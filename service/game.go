@@ -10,6 +10,7 @@ type Game struct {
 	CurrentPlayer string //当前游戏的玩家
 	PayCount int //当前游戏已购买金蛋的次数
 	State bool // 游戏运行的状态 开始/结束
+	SmashPerm bool // 是否允许砸金蛋 （未支付状态不能砸，已支付状态可以砸）
 	PlayMutex bool //游戏是否加锁状态
 }
 
