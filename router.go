@@ -45,23 +45,23 @@ func RegisterRouter(r *gin.Engine) {
 		//提交后台登入
 		adminRouter.POST("/login", admin.Login)
 		//修改管理员密码
-		adminRouter.POST("/password", middleware.AdminAuthentication(), admin.Password)
+		adminRouter.POST("/password", middleware.Authentication(), admin.Password)
 		//获取后台仪表盘数据
-		adminRouter.GET("/", middleware.AdminAuthentication(), admin.Dashboard)
+		adminRouter.GET("/", middleware.Authentication(), admin.Dashboard)
 		//提交后台登出
-		adminRouter.POST("/logout", middleware.AdminAuthentication(), admin.Logout)
+		adminRouter.POST("/logout", middleware.Authentication(), admin.Logout)
 		//获取登录验证码
-		//adminRouter.GET("/captcha", middleware.AdminAuthentication(), admin.Captcha)
+		//adminRouter.GET("/captcha", middleware.Authentication(), admin.Captcha)
 		//获取游戏设置
-		adminRouter.GET("/show",  middleware.AdminAuthentication(), admin.Show)
+		adminRouter.GET("/show",  middleware.Authentication(), admin.Show)
 		//修改游戏设置
-		adminRouter.POST("/setting", middleware.AdminAuthentication(), admin.Setting)
+		adminRouter.POST("/setting", middleware.Authentication(), admin.Setting)
 		//重置游戏
-		adminRouter.POST("/reset", middleware.AdminAuthentication(), admin.Reset)
+		adminRouter.POST("/reset", middleware.Authentication(), admin.Reset)
 		//开启游戏
-		adminRouter.POST("/start", middleware.AdminAuthentication(), admin.Start)
+		adminRouter.POST("/start", middleware.Authentication(), admin.Start)
 		//停止游戏
-		adminRouter.POST("/stop", middleware.AdminAuthentication(), admin.Stop)
+		adminRouter.POST("/stop", middleware.Authentication(), admin.Stop)
 	}
 
 	r.GET("/test", func(c *gin.Context) {

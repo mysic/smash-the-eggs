@@ -1,13 +1,10 @@
 package main
 
 import (
-	"github.com/gin-contrib/sessions"
-	"github.com/gin-contrib/sessions/cookie"
 	"github.com/gin-gonic/gin"
 	"github.com/xujiajun/nutsdb"
 	"log"
 	"os"
-	"smash-golden-eggs/middleware"
 	"smash-golden-eggs/service"
 )
 
@@ -24,10 +21,7 @@ func main(){
 	log.SetOutput(logFile)
 	log.SetFlags(log.Ldate | log.Ltime | log.Llongfile)
 	router := gin.Default()
-	// 启动session
-	store := cookie.NewStore([]byte("jfa8389sf729ap(*&DJA(#xl"))
-	router.Use(sessions.Sessions("smashGoldenEggs", store), middleware.Cors())
-	service.AdminState = false
+
 	// 启动db
 	dbConfig := nutsdb.DefaultOptions
 	dbConfig.Dir = "data/db"

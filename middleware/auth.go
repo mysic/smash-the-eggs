@@ -22,16 +22,3 @@ func Authentication() gin.HandlerFunc {
 	}
 }
 
-func AdminAuthentication() gin.HandlerFunc {
-	return func(c *gin.Context) {
-		if service.AdminState == false {
-			c.AbortWithStatusJSON(http.StatusOK, gin.H{
-				"code":-1,
-				"msg":"未登入，请先登入",
-			})
-			return
-		}
-		c.Next()
-	}
-}
-

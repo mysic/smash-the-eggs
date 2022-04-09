@@ -21,12 +21,13 @@ type passwordForm struct {
 
 // Login 登入
 func Login (c *gin.Context) {
-	if service.AdminState == true {
-		c.JSON(http.StatusOK, gin.H{
-			"code": 0,
-			"msg":"已经登录了",
-		})
-		return
+	token := c.GetHeader("Authorization")
+	if token != "" {
+		tokenString, _, err := service.Getting(token)
+		if err == nil && tokenString.Valid {
+			c.AbortWithStatusJSON(http.StatusOK, gin.H{"code": 0, "msg": "admin已经登入"})
+			return
+		}
 	}
 	var params loginForm
 	if err := c.ShouldBind(&params); err != nil {
@@ -52,23 +53,29 @@ func Login (c *gin.Context) {
 	});err != nil {}
 	err := bcrypt.CompareHashAndPassword(dbPassword, password)
 	if err != nil {
-		c.JSON(http.StatusOK, gin.H{
+		c.AbortWithStatusJSON(http.StatusOK, gin.H{
 			"code": -1,
 			"msg":"用户名或密码错误",
 		})
 		return 
 	}
-	service.AdminState = true
+	token, err = service.Setting("admin")
+	if err != nil {
+		c.AbortWithStatusJSON(http.StatusOK,gin.H{
+			"code": -1,
+			"msg":"登陆失败",
+		})
+	}
 	c.JSON(http.StatusOK, gin.H{
 		"code": 0,
 		"msg":"登录成功",
+		"data":token,
 	})
 
 }
 
 // Logout 登出
 func Logout (c *gin.Context) {
-	service.AdminState = false
 	c.JSON(http.StatusOK, gin.H{
 		"code": 0,
 		"msg":"成功登出",

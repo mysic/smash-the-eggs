@@ -1,7 +1,6 @@
 package service
 
 var GameInstance *Game
-var AdminState bool
 var PaidFigure int64
 
 type Game struct {
