@@ -1,7 +1,10 @@
 package service
 
 import (
+	"errors"
+	"fmt"
 	"github.com/dgrijalva/jwt-go"
+	"strings"
 	"time"
 )
 
@@ -33,6 +36,13 @@ func Setting(mobile string) (string,error) {
 // Getting 解析token
 
 func Getting(tokenString string) (*jwt.Token, string, error) {
+	fmt.Println(tokenString)
+	if tokenString == "" || (strings.HasPrefix(tokenString, "Bearer") && len(tokenString) <= 6){
+		return nil,"",errors.New("token不存在")
+	}
+	if strings.HasPrefix(tokenString, "Bearer") {
+		tokenString = tokenString[7:]
+	}
 	Claims := &Claims{}
 	token, err := jwt.ParseWithClaims(tokenString, Claims, func(token *jwt.Token) (i interface{}, err error) {
 		return jwtKey, nil
