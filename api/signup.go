@@ -1,16 +1,17 @@
 package api
 
 import (
-	"github.com/gin-contrib/sessions"
 	"github.com/gin-gonic/gin"
-	"log"
 	"net/http"
+	"smash-golden-eggs/service"
 )
+
+//自定义一个字符串
+
 
 type mobileForm struct {
 	Mobile string `form:"mobile" binding:"required"`
 }
-
 func MobileSignUp(c *gin.Context) {
 	var params mobileForm
 	if err := c.ShouldBind(&params); err != nil {
@@ -21,23 +22,19 @@ func MobileSignUp(c *gin.Context) {
 		})
 		return
 	}
-	session := sessions.Default(c)
+	token := c.GetHeader("Authorization")
 	// 判断是否已经登录
-	mobile := session.Get("mobile")
-	if mobile != nil {
-		c.JSON(http.StatusOK, gin.H{
-			"code":0,
-			"msg": "手机号[" + mobile.(string) + "]已经登入",
-		})
-		return
+	if token != "" {
+		tokenString, mobile, err := service.Getting(token)
+		if err == nil && tokenString.Valid {
+			c.AbortWithStatusJSON(http.StatusOK, gin.H{"code": 0, "msg": "手机号[" + mobile + "]已经登入"})
+			return
+		}
 	}
-	//session 1小时超时设置
-	session.Options(sessions.Options{MaxAge: 3600})
-	session.Set("mobile",params.Mobile)
-	err := session.Save()
+	//token 1小时超时设置
+	token, err := service.Setting(params.Mobile)
 	if err != nil {
-		log.Println(err.Error())
-		c.JSON(http.StatusOK, gin.H{
+		c.AbortWithStatusJSON(http.StatusOK, gin.H{
 			"code":-1,
 			"msg": "手机号[" + params.Mobile + "]登入失败",
 		})
@@ -46,5 +43,6 @@ func MobileSignUp(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{
 		"code":0,
 		"msg": "手机号[" + params.Mobile + "]登入成功",
+		"data":token,
 	})
 }
