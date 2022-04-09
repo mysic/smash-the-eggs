@@ -91,25 +91,18 @@ func Smash(c *gin.Context) {
 	//将砸掉的金蛋序号写入Game.SmashedFigures中
 	service.GameInstance.SmashedFigures = append(service.GameInstance.SmashedFigures, smashFigure)
 	//倒计时10秒，如果没有购买则解锁游戏
-	//todo 当支付成功后的下一局游戏未到本次倒计时结束，也已结束，该如何处理
-	// 当本次支付成功，那么应该传进来一个值，表示已经支付成功，然后子coroutine倒计时完成后不做任何处理
 	go func(chan bool) {
-		counter := make(chan bool,1)
-		go func(chan bool) {
-			time.Sleep(time.Second * 10)
-			counter <- true
-		}(counter)
-		if <-service.PayState {
-
+		select {
+			case <-service.PayState:
+				if service.OrderState != service.OrderStatePaid {
+					service.GameInstance.PlayMutex = false
+				}
+				return
+			case <-time.After(time.Second * 10):
+				if service.OrderState != service.OrderStatePaid {
+					service.GameInstance.PlayMutex = false
+				}
 		}
-
-
-		if <-counter {
-			if service.OrderState != service.OrderStatePaid {
-				service.GameInstance.PlayMutex = false
-			}
-		}
-		defer close(counter)
 	}(service.PayState)
 	//对比接口post上来的smash数字是否一致，如果一致返回成功砸中，不一致返回没砸中
 	if service.PaidFigure == smashFigure {

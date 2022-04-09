@@ -104,15 +104,25 @@ func PrePay(c *gin.Context) {
 	if err != nil {
 		return 
 	}
-	go func(bucket,orderSn string) {
+	// 拉起支付后，60秒内未完成支付，则关闭订单
+	go func(bucket string, key []byte) {
 		time.Sleep(time.Second * 60)
+		err := service.Conn.View(func(tx *nutsdb.Tx) error {
+			order, err := tx.LRange(bucket, key,0,-1)
+			if err != nil {
+				return err
+			}
+			if string(order[3]) != service.OrderStatePaid {
+				service.GameInstance.PlayMutex = false
+				//todo 调用微信关闭订单接口
+			}
 
-		if service.OrderState != service.OrderStatePaid {
-			service.GameInstance.PlayMutex = false
-			//todo 调用微信关闭订单接口
+			return nil
+		})
+		if err != nil {
+			return
 		}
-
-	}(bucket,orderSn)
+	}(bucket,key)
 	//todo 获取商户支付参数,调用预下单接口(不返JSON，直接redirect)
 	//client, err := service.NewWechatPayClient()
 	//if err != nil {
@@ -184,10 +194,10 @@ func Notify(c *gin.Context){
 	}
 	//更新订单状态
 	err := service.Conn.Update(func(tx *nutsdb.Tx) error {
-		if items, err := tx.LRange(bucket,key,0,-1); err != nil {
+		if order, err := tx.LRange(bucket,key,0,-1); err != nil {
 			return err
 		} else {
-			if string(items[3]) == service.OrderStatePaid {
+			if string(order[3]) == service.OrderStatePaid {
 				return errors.New(string(key) + "订单已支付")
 			}
 		}
@@ -214,11 +224,11 @@ func Notify(c *gin.Context){
 	// 根据订单号查询所购买的figure
 	var mobile string
 	err = service.Conn.View(func(tx *nutsdb.Tx) error {
-		orderInfo, err := tx.LRange(bucket, key, 0, -1)
+		order, err := tx.LRange(bucket, key, 0, -1)
 		if err != nil {
 			return err
 		}
-		mobile = string(orderInfo[5]) //val为手机号-支付金额-购买数字-状态-日期-时间戳
+		mobile = string(order[5]) //val为手机号-支付金额-购买数字-状态-日期-时间戳
 		return nil
 	})
 	if err != nil {
