@@ -41,7 +41,7 @@ func PrePay(c *gin.Context) {
 		})
 		return
 	}
-	service.GameInstance.PlayMutex = true //tips 此变量的更新在最终游戏结束，当前用户时限内未购买的情况下进行解锁
+	service.GameInstance.PlayMutex = true //tips 此变量的更新在最终游戏结束当前用户时限内未购买的情况下进行解锁
 	service.Mutex.Unlock()
 	// 用户打算购买的金蛋
 	figure, _ := strconv.ParseInt(c.PostForm("figure"),0,0)
