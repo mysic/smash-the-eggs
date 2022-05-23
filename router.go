@@ -7,6 +7,7 @@ import (
 	"golang.org/x/crypto/bcrypt"
 	"log"
 	"net/http"
+	"os"
 	"smash-golden-eggs/admin"
 	"smash-golden-eggs/api"
 	"smash-golden-eggs/middleware"
@@ -26,7 +27,6 @@ func RegisterRouter(r *gin.Engine) {
 	apiRouter := r.Group("/api")
 	{
 		//注册手机号，建立会话
-
 		apiRouter.POST("/signup", api.MobileSignUp)
 		//获取本轮游戏内容
 		apiRouter.GET("/game", middleware.Authentication(), middleware.GameState(), api.Game)
@@ -70,6 +70,12 @@ func RegisterRouter(r *gin.Engine) {
 	})
 
 	r.GET("/init", func(c *gin.Context) {
+		_,err := os.Stat("./data/adminInit.lock")
+		if err == nil{
+			fmt.Println("administrator is initialed")
+			log.Println("administrator is initialed")
+			return
+		}
 		if err := service.Conn.Update(func(tx *nutsdb.Tx) error {
 			err := tx.Delete("admin", []byte("admin"))
 			if err != nil {
@@ -78,6 +84,11 @@ func RegisterRouter(r *gin.Engine) {
 			password, _ := bcrypt.GenerateFromPassword([]byte("123456"), bcrypt.DefaultCost)
 			return tx.Put("admin", []byte("admin"), password,0)
 		}); err != nil {
+			log.Println(err)
+			return
+		}
+		_, err = os.Create("./data/adminInit.lock")
+		if err != nil {
 			log.Println(err)
 		}
 	})

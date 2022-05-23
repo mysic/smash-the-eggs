@@ -30,8 +30,8 @@ func main(){
 		log.Println(err.Error())
 		return
 	}
-	defer func(Db *nutsdb.DB) {
-		err := Db.Close()
+	defer func(Conn *nutsdb.DB) {
+		err := Conn.Close()
 		if err != nil {
 
 		}
